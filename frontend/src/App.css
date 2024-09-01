@@ -1,0 +1,114 @@
+/* Sidebar CSS */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px; /* Set the width for the sidebar */
+  height: 100vh; /* Full height (viewport height) */
+  overflow-y: auto; /* Add scroll if the content overflows vertically */
+  background-color: #f8f9fa; /* Background color */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Optional shadow for a slight 3D effect */
+  transition: width 0.3s ease; /* Smooth transition for width changes */
+  
+}
+
+.sidebar.collapsed {
+  width: 0; /* Set the collapsed width to zero */
+  overflow: hidden; /* Hide content when collapsed */
+}
+
+.sidebar .btn {
+  width: 100%; /* Make button span the full width of the sidebar */
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .sidebar {
+    width: 200px; /* Adjust width for medium screens */
+  }
+}
+
+@media (max-width: 992px) {
+  .sidebar {
+    width: 150px; /* Adjust width for smaller screens */
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%; /* Full width on small screens */
+    height: auto; /* Auto height to fit content */
+    position: relative; /* Relative position on small screens */
+    box-shadow: none; /* Remove shadow on small screens */
+    overflow: visible; /* Make sure content is visible on small screens */
+  }
+}
+
+/* Ensure content fits within viewport */
+.container {
+  margin-left: 250px; /* Ensure content starts after the sidebar */
+  transition: margin-left 0.3s ease; /* Smooth transition for margin change */
+}
+
+@media (max-width: 768px) {
+  .container {
+    margin-left: 0; /* Remove margin on small screens */
+  }
+}
+
+.main-content {
+  margin-left: 250px; /* Space for the sidebar */
+  padding: 20px;
+  overflow: hidden; /* Prevent content from spilling over */
+  height: calc(100vh - 40px); /* Full height of the viewport minus header */
+  box-sizing: border-box; /* Include padding and border in element's total width and height */
+  transition: margin-left 0.3s ease; /* Smooth transition for margin change */
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0; /* Remove margin on small screens */
+    height: auto; /* Adjust height on small screens */
+  }
+}
+
+body {
+  max-width: 100vw; /* Prevent horizontal overflow */
+  overflow-x: hidden; /* Hide horizontal overflow */
+  margin: 0; /* Remove default body margin */
+  height: 100vh; /* Ensure the body takes the full viewport height */
+
+}
+
+.container {
+  max-width: 100%; /* Full width on small screens */
+  box-sizing: border-box; /* Include padding and border in element's total width and height */
+}
+
+
+.full-background {
+  position: relative; /* Ensure the pseudo-element is positioned correctly */
+  overflow: hidden; /* Hide any overflow from the pseudo-element */
+  width: 100%; /* Ensure it takes the full viewport width */
+  min-height: 100vh; /* Ensure it covers the full viewport height */
+}
+
+.full-background::before {
+  content: ""; /* Necessary to generate the pseudo-element */
+  position: absolute; /* Absolute positioning to cover the parent */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('../public/chat.jpg'); /* Path to the image */
+  background-size: cover; /* Ensure the image covers the entire viewport */
+  background-repeat: no-repeat; /* Prevent the image from repeating */
+  background-position: center; /* Center the image */
+  opacity: 0.7; /* Adjust opacity of the background image */
+  z-index: -1; /* Ensure the image stays behind the content */
+}
+
+.full-background .content {
+  position: relative; /* Ensure the content is on top of the pseudo-element */
+}
+
