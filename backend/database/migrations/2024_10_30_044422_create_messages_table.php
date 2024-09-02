@@ -11,13 +11,16 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('messages', function (Blueprint $table) {
-            $table->id();
+         Schema::create('messages', function (Blueprint $table) {
+            $table->increments('id'); 
             $table->text('content');
-            $table->foreignId('sender_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('recipient_id')->constrained('users')->onDelete('cascade');
-            $table->timestamp('seen_at')->default(DB::raw('CURRENT_TIMESTAMP'));
+            $table->unsignedInteger('sender_id'); 
+            $table->unsignedInteger('recipient_id'); 
+            $table->timestamp('seen_at')->nullable(); 
             $table->timestamps();
+
+            $table->foreign('sender_id')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('recipient_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
 
