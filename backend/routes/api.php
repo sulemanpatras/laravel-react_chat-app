@@ -27,7 +27,6 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/login', [UserController::class, 'login']);
 Route::post('/register', [UserController::class, 'register']);
 Route::get('messages/{userId}/{selectedUserId}', [ChatController::class, 'getMessages']);
-Route::post('/messages/markAsSeen', [ChatController::class, 'markAsSeen']);
 
 Route::get('/unread-messages/{userId}', [MessageController::class, 'getUnreadMessages']);
 

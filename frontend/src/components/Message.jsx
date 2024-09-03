@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import Pusher from 'pusher-js';
 import Sidebar from './Sidebar';
@@ -15,12 +15,11 @@ const Message = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState({});
   const navigate = useNavigate();
-
+  const messagesEndRef = useRef(null);
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
   };
-
 
   useEffect(() => {
     const checkAuth = () => {
@@ -58,8 +57,7 @@ const Message = () => {
           }
           return updatedMessages;
         });
-        
-        // Only increment the counter if the message is from another user
+
         if (data.sender_id !== userId) {
           setUnreadMessages(prevUnreadMessages => ({
             ...prevUnreadMessages,
@@ -77,39 +75,36 @@ const Message = () => {
     };
   }, [userId]);
 
-  // Inside the `handleUserSelect` function of the `Message` component
-const handleUserSelect = async (user) => {
-  setSelectedUser(user);
+  const handleUserSelect = async (user) => {
+    setSelectedUser(user);
 
-  try {
-    const response = await fetch(`http://127.0.0.1:8000/api/messages/${userId}/${user.id}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/messages/${userId}/${user.id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch messages');
       }
-    });
 
-    if (!response.ok) {
-      throw new Error('Failed to fetch messages');
+      const data = await response.json();
+      setMessages(prevMessages => ({
+        ...prevMessages,
+        [user.id]: data
+      }));
+
+      setUnreadMessages(prevUnreadMessages => ({
+        ...prevUnreadMessages,
+        [user.id]: 0
+      }));
+    } catch (error) {
+      console.error('Error fetching messages:', error);
     }
+  };
 
-    const data = await response.json();
-    setMessages(prevMessages => ({
-      ...prevMessages,
-      [user.id]: data
-    }));
-
-    // Reset unread messages count for this user
-    setUnreadMessages(prevUnreadMessages => ({
-      ...prevUnreadMessages,
-      [user.id]: 0
-    }));
-  } catch (error) {
-    console.error('Error fetching messages:', error);
-  }
-};
-
-
-  const submit = async e => {
+  const submit = async (e) => {
     e.preventDefault();
 
     if (!selectedUser) {
@@ -117,7 +112,7 @@ const handleUserSelect = async (user) => {
       return;
     }
     if (!userId) {
-      setError('Please Login first to Chat.');
+      setError('Please login first to chat.');
       return;
     }
 
@@ -152,7 +147,6 @@ const handleUserSelect = async (user) => {
             id: data.message.id
           }]
         }));
-        // Reset unread messages count for the selected user
         setUnreadMessages(prevUnreadMessages => ({
           ...prevUnreadMessages,
           [selectedUser.id]: 0
@@ -165,34 +159,11 @@ const handleUserSelect = async (user) => {
     }
   };
 
-  const markAsSeen = async (messageId) => {
-    try {
-      const response = await fetch('http://127.0.0.1:8000/api/messages/markAsSeen', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ message_id: messageId }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to mark message as seen');
-      }
-    } catch (error) {
-      console.error('Error marking message as seen:', error);
-    }
-  };
-
   useEffect(() => {
-    if (selectedUser) {
-      (messages[selectedUser.id] || []).forEach(message => {
-        if (message.sender_id !== userId && !message.seen_at) {
-          markAsSeen(message.id);
-        }
-      });
+    if (selectedUser && messages[selectedUser.id]?.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [selectedUser]);
+  }, [messages, selectedUser]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -205,7 +176,12 @@ const handleUserSelect = async (user) => {
     <>
       <div className="container mt-5">
         <CollapseButton isCollapsed={isCollapsed} toggleCollapse={toggleCollapse} />
-        <Sidebar isCollapsed={isCollapsed} onUserSelect={handleUserSelect} unreadMessages={unreadMessages} />
+        <Sidebar 
+          isCollapsed={isCollapsed} 
+          onUserSelect={handleUserSelect} 
+          unreadMessages={unreadMessages} 
+          selectedUserId={selectedUser?.id} // Pass the selected user ID
+        />
         {isAuthenticated ? (
           <button onClick={handleLogout} className="btn btn-danger mt-3">Logout</button>
         ) : (
@@ -240,15 +216,13 @@ const handleUserSelect = async (user) => {
                   <strong className="message-sender mb-1">
                     {message.sender_id === userId ? 'Me' : selectedUser?.name}
                   </strong>
-                  <small className="message-time text-muted">
-                    {message.seen_at ? 'Seen' : 'Sent'}
-                  </small>
                 </div>
                 <div className="message-content small">
                   {message.content}
                 </div>
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
 
           <div className="message-input mt-4">
@@ -260,10 +234,10 @@ const handleUserSelect = async (user) => {
                 onChange={(e) => setFormMessages(e.target.value)}
                 style={{ borderRadius: '10px 0 0 10px' }}
               />
-              <button type="submit" className="btn btn-success rounded-0" style={{ borderRadius: '0 10px 10px 0' }}>Send</button>
+              <button type="submit" className="btn btn-primary rounded-0">Send</button>
             </form>
           </div>
-        </div>
+        </div>    
       </div>
     </>
   );

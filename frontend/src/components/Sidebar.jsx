@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const Sidebar = ({ isCollapsed, onUserSelect, unreadMessages }) => {
+const Sidebar = ({ isCollapsed, onUserSelect, unreadMessages, selectedUserId }) => {
   const [users, setUsers] = useState([]);
-  const [selectedUserId, setSelectedUserId] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -32,7 +31,6 @@ const Sidebar = ({ isCollapsed, onUserSelect, unreadMessages }) => {
   }, []);
 
   const handleUserSelect = (user) => {
-    setSelectedUserId(user.id); // Update the selected user ID
     onUserSelect(user); // Trigger the callback to the parent component
   };
 
@@ -53,7 +51,7 @@ const Sidebar = ({ isCollapsed, onUserSelect, unreadMessages }) => {
               >
                 <svg className="bi me-2" width="16" height="16"></svg>
                 {user.name}
-                {unreadMessages[user.id] > 0 && (
+                {selectedUserId !== user.id && unreadMessages[user.id] > 0 && (
                   <span className="badge bg-danger ms-2">{unreadMessages[user.id]}</span>
                 )}
               </a>
