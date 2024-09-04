@@ -13,9 +13,8 @@ class BroadcastServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Broadcast::routes();
-        Broadcast::channel('chat', function ($user) {
-            return Auth::check();
+        Broadcast::channel('chat.{recipient_id}', function ($user, $recipient_id) {
+            return (int) $user->id === (int) $recipient_id;
         });
         
 

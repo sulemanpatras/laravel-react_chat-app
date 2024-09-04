@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Messagem;
 use Illuminate\Http\Request;
 use App\Events\Message;
+use App\Events\TypingEvent;
 
 class ChatController extends Controller
 {
@@ -52,6 +53,26 @@ public function getUnreadMessages($userId)
         ->pluck('count', 'sender_id');
 
     return response()->json($unreadMessages);
+}
+
+// app/Http/Controllers/ChatController.php
+
+public function typing(Request $request)
+{
+    $validatedData = $request->validate([
+        'sender_id' => 'required|exists:users,id',
+        'recipient_id' => 'required|exists:users,id',
+        'is_typing' => 'required|boolean', // This ensures `is_typing` must be a boolean
+    ]);
+
+    // Broadcast the typing event
+    event(new TypingEvent(
+        $validatedData['sender_id'],
+        $validatedData['recipient_id'],
+        $validatedData['is_typing']
+    ));
+
+    return response()->json(['success' => true]);
 }
 
 }

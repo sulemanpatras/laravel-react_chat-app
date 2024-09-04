@@ -1,4 +1,5 @@
 <?php
+// app/Events/TypingEvent.php
 
 namespace App\Events;
 
@@ -8,37 +9,36 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class Message implements ShouldBroadcast
+class TypingEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $sender_id;
     public $recipient_id;
-    public $content;
+    public $is_typing;
 
-    public function __construct($sender_id, $recipient_id, $content)
+    public function __construct($sender_id, $recipient_id, $is_typing)
     {
         $this->sender_id = $sender_id;
         $this->recipient_id = $recipient_id;
-        $this->content = $content;
+        $this->is_typing = $is_typing;
     }
 
     public function broadcastOn()
     {
-        return new Channel('chat');
+        return new Channel('chat.' . $this->recipient_id);
     }
 
     public function broadcastAs()
     {
-        return 'message';
+        return 'typing';
     }
 
     public function broadcastWith()
     {
         return [
             'sender_id' => $this->sender_id,
-            'recipient_id' => $this->recipient_id,
-            'content' => $this->content,
+            'is_typing' => $this->is_typing,
         ];
     }
 }
