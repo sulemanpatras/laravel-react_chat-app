@@ -32,15 +32,15 @@ const Login = () => {
     try {
       const response = await axios.post("http://127.0.0.1:8000/api/login", user);
 
-      if (response.data.success) {
-        localStorage.setItem('token', response.data.token); // Store token
-        localStorage.setItem('username', response.data.user.email);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
+if (response.data.success) {
+  localStorage.setItem('token', response.data.token); // Store token
+  localStorage.setItem('user', JSON.stringify(response.data.user)); // Store user info including name
 
-        navigate("/"); // Navigate to home page or another route
-      } else {
-        setMsg(response.data.message || "Login failed. Please check your credentials.");
-      }
+  navigate("/"); // Navigate to home page or another route
+} else {
+  setMsg(response.data.message || "Login failed. Please check your credentials.");
+}
+
       
     } catch (error) {
       console.error("There was an error logging in!", error);

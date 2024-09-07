@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from "react-router-dom";
 import Pusher from 'pusher-js';
 import Sidebar from './Sidebar';
 import CollapseButton from './CollapseButton';
-import debounce from 'lodash.debounce'; // Add lodash for debouncing
+
 
 const Message = () => {
   const [username, setUsername] = useState('');
@@ -15,9 +15,9 @@ const Message = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [unreadMessages, setUnreadMessages] = useState({});
-  const [typingStatus, setTypingStatus] = useState(null); // For typing indicator
   const navigate = useNavigate();
   const messagesEndRef = useRef(null);
+  
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
@@ -33,21 +33,19 @@ const Message = () => {
 
     const storedUser = JSON.parse(localStorage.getItem("user"));
     if (storedUser) {
-      setUsername(storedUser.email);
+      setUsername(storedUser.name);
       setUserId(storedUser.id);
     } else {
       setUsername('Guest');
       setUserId(null);
     }
 
-    if (!userId) return; // Exit if userId is not available
-
     Pusher.logToConsole = true;
     const pusher = new Pusher('ec84eeedbee40d46e4d7', {
       cluster: 'ap2'
     });
 
-    const channel = pusher.subscribe(`chat.${userId}`);
+    const channel = pusher.subscribe('chat');
 
     const handleMessage = data => {
       if (data.recipient_id === userId || data.sender_id === userId) {
@@ -71,22 +69,15 @@ const Message = () => {
       }
     };
 
-    const handleTyping = data => {
-      if (data.sender_id === selectedUser?.id) {
-        setTypingStatus(data.is_typing ? "User is typing..." : null);
-      }
-    };
-    
 
     channel.bind('message', handleMessage);
-    channel.bind('typing', handleTyping);
 
     return () => {
       channel.unbind('message', handleMessage);
-      channel.unbind('typing', handleTyping);
-      pusher.unsubscribe(`chat.${userId}`);
+
+      pusher.unsubscribe('chat');
     };
-  }, [userId, selectedUser]);
+  }, [selectedUser, userId]);
 
   const handleUserSelect = async (user) => {
     setSelectedUser(user);
@@ -144,8 +135,7 @@ const Message = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Network response was not ok');
+        throw new Error('Network response was not ok');
       }
 
       const data = await response.json();
@@ -169,35 +159,10 @@ const Message = () => {
         console.error('Failed to send message:', data.message);
       }
     } catch (error) {
-      setError(`Error sending message: ${error.message}`);
       console.error('There was an error sending the message:', error);
     }
   };
 
-  const handleTyping = debounce(async () => {
-    if (selectedUser) {
-      try {
-        await fetch('http://127.0.0.1:8000/api/typing', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({
-            sender_id: userId,
-            recipient_id: selectedUser.id,
-            is_typing: formMessages.length > 0
-          })
-        });
-      } catch (error) {
-        console.error('Error sending typing status:', error);
-      }
-    }
-  }, 1000); // Debounce typing status updates
-
-  useEffect(() => {
-    handleTyping();
-  }, [formMessages]);
 
   useEffect(() => {
     if (selectedUser && messages[selectedUser.id]?.length > 0) {
@@ -220,7 +185,7 @@ const Message = () => {
           isCollapsed={isCollapsed} 
           onUserSelect={handleUserSelect} 
           unreadMessages={unreadMessages} 
-          selectedUserId={selectedUser?.id}
+          selectedUserId={selectedUser?.id} // Pass the selected user ID
         />
         {isAuthenticated ? (
           <button onClick={handleLogout} className="btn btn-danger mt-3">Logout</button>
@@ -249,7 +214,7 @@ const Message = () => {
             </div>
           )}
 
-<div className="messages-container list-group list-group-flush border rounded mb-3 p-3" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          <div className="messages-container list-group list-group-flush border rounded mb-3 p-3" style={{ maxHeight: '400px', overflowY: 'auto' }}>
             {(messages[selectedUser?.id] || []).map((message) => (
               <div key={message.id} className={`message-item d-flex flex-column mb-2 p-2 ${message.sender_id === userId ? 'bg-primary text-white' : 'bg-light text-dark'}`} style={{ borderRadius: '10px' }}>
                 <div className="d-flex w-100 align-items-center justify-content-between">
@@ -264,23 +229,14 @@ const Message = () => {
             ))}
             <div ref={messagesEndRef} />
           </div>
-
-          {typingStatus && (
-            <div className="typing-indicator text-secondary mb-3">
-              {typingStatus}
-            </div>
-          )}
-
           <div className="message-input mt-4">
             <form onSubmit={submit} className="d-flex">
-              <input
+            <input
                 className="form-control rounded-0 border-end-0"
                 placeholder="Write a message..."
                 value={formMessages}
                 onChange={(e) => {
-                  setFormMessages(e.target.value);
-                  handleTyping();
-                }}
+                  setFormMessages(e.target.value);        }}
                 style={{ borderRadius: '10px 0 0 10px' }}
               />
               <button type="submit" className="btn btn-primary rounded-0">Send</button>

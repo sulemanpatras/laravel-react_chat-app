@@ -51,9 +51,10 @@ const Sidebar = ({ isCollapsed, onUserSelect, unreadMessages, selectedUserId }) 
               >
                 <svg className="bi me-2" width="16" height="16"></svg>
                 {user.name}
-                {selectedUserId !== user.id && unreadMessages[user.id] > 0 && (
-                  <span className="badge bg-danger ms-2">{unreadMessages[user.id]}</span>
-                )}
+{unreadMessages[user.id] > 0 && (
+  <span className="badge bg-danger ms-2">{unreadMessages[user.id]}</span>
+)}
+
               </a>
             </li>
           ))

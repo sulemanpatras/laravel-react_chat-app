@@ -35,31 +35,33 @@ class UserController extends Controller
     public function login(Request $request) {
         $email = $request->input('email');
         $password = $request->input('password');
-    
+        
         if (empty($email) || empty($password)) {
-            return Response::json(['success' => false, 'message' => 'Email and password are required.'], 400);
+            return response()->json(['success' => false, 'message' => 'Email and password are required.'], 400);
         }
-    
-        // Use the User model instead of DB facade
+        
+        // Fetch user by email
         $user = User::where('email', $email)->first();
-    
+        
         if (!$user) {
-            return Response::json(['success' => false, 'message' => 'User not found.'], 404);
+            return response()->json(['success' => false, 'message' => 'User not found.'], 404);
         }
-    
+        
+        // Check password
         if (!Hash::check($password, $user->password)) {
-            return Response::json(['success' => false, 'message' => 'Invalid password.'], 401);
+            return response()->json(['success' => false, 'message' => 'Invalid password.'], 401);
         }
-    
+        
         // Generate a Sanctum token
         $token = $user->createToken('auth_token')->plainTextToken;
-    
-        return Response::json([
+        
+        return response()->json([
             'success' => true,
             'token' => $token,
             'user' => [
                 'email' => $user->email,
                 'id' => $user->id,
+                'name' => $user->name ?? '', // Include the name if available, otherwise an empty string
             ]
         ]);
     }

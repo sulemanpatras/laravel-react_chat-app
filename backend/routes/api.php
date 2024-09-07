@@ -17,6 +17,8 @@ use App\Http\Controllers\UserController;
 |
 */
 
+
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('messages', [ChatController::class, 'message']);
     Route::post('/logout', [UserController::class, 'logout']);
@@ -27,15 +29,4 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/login', [UserController::class, 'login']);
 Route::post('/register', [UserController::class, 'register']);
 Route::get('messages/{userId}/{selectedUserId}', [ChatController::class, 'getMessages']);
-Route::post('/typing', [ChatController::class, 'typing']); // Add this line
-Route::get('/unread-messages/{userId}', [MessageController::class, 'getUnreadMessages']);
-
-
-
-
-
-
-
-
-
-
+Route::get('/unread-messages/{userId}', [ChatController::class, 'getUnreadMessages']);
