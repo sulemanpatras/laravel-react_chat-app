@@ -6,7 +6,10 @@ use App\Models\Messagem;
 use Illuminate\Http\Request;
 use App\Events\Message;
 use App\Events\TypingEvent;
-use App\Events\MessageSeen;
+use App\Events\NotificationSent;
+use App\Events\MessageSent;
+
+
 
 class ChatController extends Controller
 {
@@ -27,8 +30,13 @@ class ChatController extends Controller
         // Broadcast the message
         event(new Message($message->sender_id, $message->recipient_id, $message->content));
     
+        // Broadcast a notification to the recipient
+        event(new NotificationSent('You have a new message!', $validatedData['recipient_id']));
+    
         return response()->json(['success' => true, 'message' => 'Message sent and stored successfully.']);
     }
+    
+
     
 
     public function getMessages($userId, $selectedUserId)
@@ -56,6 +64,17 @@ public function getUnreadMessages($userId)
     return response()->json($unreadMessages);
 }
 
+public function notification(Request $request)
+{
+    $validatedData = $request->validate([
+        'message' => 'required|string',
+        'recipient_id' => 'required|exists:users,id',
+    ]);
+
+    event(new NotificationSent($validatedData['message'], $validatedData['recipient_id']));
+
+    return response()->json(['status' => 'Notification sent!']);
+}
 
 
 }

@@ -7,6 +7,7 @@ import Sidebar from './components/Sidebar';
 import Logout from './components/Logout';
 import NoPage from './components/NoPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import Notification from './components/Notification';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         {/* Public Routes */}
         <Route path="login" element={<Login />} />
         <Route path="signup" element={<Signup />} />
+        <Route path="notification" element={<Notification />} />
         <Route path="*" element={<NoPage />} />
 
         {/* Protected Routes */}

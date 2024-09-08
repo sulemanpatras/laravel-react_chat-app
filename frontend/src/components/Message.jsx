@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Pusher from 'pusher-js';
 import Sidebar from './Sidebar';
 import CollapseButton from './CollapseButton';
+import Notification from './Notification';
 
 
 const Message = () => {
@@ -110,7 +111,7 @@ const Message = () => {
 
   const submit = async (e) => {
     e.preventDefault();
-
+  
     if (!selectedUser) {
       setError('Please select a user to chat with.');
       return;
@@ -119,7 +120,7 @@ const Message = () => {
       setError('Please login first to chat.');
       return;
     }
-
+  
     try {
       const response = await fetch('http://127.0.0.1:8000/api/messages', {
         method: 'POST',
@@ -133,15 +134,17 @@ const Message = () => {
           content: formMessages
         })
       });
-
+  
       if (!response.ok) {
         throw new Error('Network response was not ok');
       }
-
+  
       const data = await response.json();
       if (data.success) {
         setFormMessages('');
         setError('');
+  
+        // Update local messages state
         setMessages(prevMessages => ({
           ...prevMessages,
           [selectedUser.id]: [...(prevMessages[selectedUser.id] || []), {
@@ -151,6 +154,21 @@ const Message = () => {
             id: data.message.id
           }]
         }));
+  
+        // Notify recipient (Not the sender)
+        if (userId !== selectedUser.id) {
+          await fetch('http://127.0.0.1:8000/api/notification', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              message: `New message from ${username}: ${formMessages}`, 
+              recipient_id: selectedUser.id 
+            }),
+          });
+        }
+  
         setUnreadMessages(prevUnreadMessages => ({
           ...prevUnreadMessages,
           [selectedUser.id]: 0
@@ -162,6 +180,7 @@ const Message = () => {
       console.error('There was an error sending the message:', error);
     }
   };
+  
 
 
   useEffect(() => {
@@ -177,9 +196,32 @@ const Message = () => {
     navigate('/login');
   };
 
+  const handleClick = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/notification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: 'Test notification!' }),
+      });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      console.log('Notification triggered');
+    } catch (error) {
+      console.error('Error:', error);
+    }
+
+  
+  
+  };
+  
+  
   return (
     <>
       <div className="container mt-5">
+        
         <CollapseButton isCollapsed={isCollapsed} toggleCollapse={toggleCollapse} />
         <Sidebar 
           isCollapsed={isCollapsed} 
@@ -192,6 +234,8 @@ const Message = () => {
         ) : (
           <Link to="/login" className="btn btn-primary mb-3">Login</Link>
         )}
+<Notification userId={userId} />
+
 
         <div className="chat-container bg-light p-4 rounded shadow-sm mt-4">
           <div className="user-info mb-5 text-center">
@@ -213,7 +257,6 @@ const Message = () => {
               {error}
             </div>
           )}
-
           <div className="messages-container list-group list-group-flush border rounded mb-3 p-3" style={{ maxHeight: '400px', overflowY: 'auto' }}>
             {(messages[selectedUser?.id] || []).map((message) => (
               <div key={message.id} className={`message-item d-flex flex-column mb-2 p-2 ${message.sender_id === userId ? 'bg-primary text-white' : 'bg-light text-dark'}`} style={{ borderRadius: '10px' }}>
@@ -240,6 +283,8 @@ const Message = () => {
                 style={{ borderRadius: '10px 0 0 10px' }}
               />
               <button type="submit" className="btn btn-primary rounded-0">Send</button>
+             
+
             </form>
           </div>
         </div>    
